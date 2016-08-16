@@ -3,7 +3,7 @@ class MyStack
 
   def initialize
     @stack = Array.new
-    refresh
+    self.top = nil
   end
 
   def push(item)
@@ -22,7 +22,7 @@ class MyStack
   end
 
   def refresh
-    @top = @stack[0]
+    self.top = @stack[0]
   end
   private :refresh
 

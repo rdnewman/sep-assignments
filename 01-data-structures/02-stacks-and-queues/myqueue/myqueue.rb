@@ -4,7 +4,8 @@ class MyQueue
 
   def initialize
     @queue = Array.new
-    @tail = @head = @queue[0]
+    @head = @queue[0]
+    @tail = @queue[0]
   end
 
   def enqueue(element)

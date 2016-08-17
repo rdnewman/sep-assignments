@@ -43,14 +43,14 @@ def compare2
 
   Benchmark.bm do |trial|
     trial.report("find #{target}th item in array      ") do
-      SIZE.times do
+      (SIZE/10).times do
         array[target]
       end
     end
 
     trial.report("find #{target}th item in linked list") do
-      SIZE.times do
-        list.find(target_node)
+      (SIZE/10).times do
+        list.send(:find, target_node)
       end
     end
   end

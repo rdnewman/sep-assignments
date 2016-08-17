@@ -21,7 +21,7 @@ class LinkedList
   # This method removes the last node in the lists and must keep the rest of the list intact.
   def remove_tail
     return unless @head && @tail
-    result = @head.find(@tail)
+    result = find(@tail)
     if result[:found]
       @head = nil unless result[:previous]
       @tail = result[:previous]
@@ -31,13 +31,18 @@ class LinkedList
 
   # This method prints out a representation of the list.
   def print
-    @head.print if @head
+    node = @head
+    loop do
+      break unless node
+      puts node.data
+      node = node.next
+    end
   end
 
   # This method removes `node` from the list and must keep the rest of the list intact.
   def delete(node)
     return unless node && @head
-    result = @head.find(node)
+    result = find(node)
     if result[:found]
       if result[:previous]   # if not @head
         result[:previous].next = result[:found].next
@@ -62,9 +67,21 @@ class LinkedList
     @tail = nil unless @head
   end
 
-  # this method only exists for benchmarking purposes; it's silly otherwise since one already has the node
+  # (private helper method)
   def find(node)
-    result = @head.find(node)
-    result[:found]
+    result = {found: nil, previous: nil}
+    if @head
+      result[:found] = @head
+      loop do
+        return result if result[:found].equal? node
+        break unless result[:found].next
+        result[:found], result[:previous] = result[:found].next, result[:found]
+      end
+      result[:found] = nil
+      result[:previous] = @tail
+    end
+    return result
   end
+  private :find
+
 end

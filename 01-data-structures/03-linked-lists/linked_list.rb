@@ -69,18 +69,19 @@ class LinkedList
 
   # (private helper method)
   def find(node)
-    result = {found: nil, previous: nil}
+    curr_node = nil
+    prev_node = nil
     if @head
-      result[:found] = @head
+      curr_node = @head
       loop do
-        return result if result[:found].equal? node
-        break unless result[:found].next
-        result[:found], result[:previous] = result[:found].next, result[:found]
+        return {found: curr_node, previous: prev_node} if curr_node.equal? node
+        break unless curr_node.next
+        curr_node, prev_node = curr_node.next, curr_node
       end
-      result[:found] = nil
-      result[:previous] = @tail
+      curr_node = nil
+      prev_node = @tail
     end
-    return result
+    return {found: curr_node, previous: prev_node}
   end
   private :find
 

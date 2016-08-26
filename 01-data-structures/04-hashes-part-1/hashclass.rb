@@ -2,10 +2,9 @@ require_relative './hash_item'
 
 class HashClass
 
-  def initialize(size, test = :first)
+  def initialize(size)
     @items = Array.new(size)
     @size = size > 0 ? size : 1
-    @test = test
   end
 
   def []=(key, value)

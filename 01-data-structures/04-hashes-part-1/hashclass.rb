@@ -2,9 +2,10 @@ require_relative './hash_item'
 
 class HashClass
 
-  def initialize(size)
+  def initialize(size, test = :first)
     @items = Array.new(size)
     @size = size > 0 ? size : 1
+    @test = test
   end
 
   def []=(key, value)
@@ -16,11 +17,12 @@ class HashClass
       idx = index(key, @size)
       item = @items[idx]
     end
-    @items[idx] = HashItem.new(key, value)
+    unless item && item.key == key
+      @items[idx] = HashItem.new(key, value)
+    end
     puts "size:  #{size}"
     puts "state: #{@items.inspect}"
   end
-
 
   def [](key)
     item = @items[index(key, @size)]
@@ -31,7 +33,10 @@ class HashClass
     @size = (@size * 2)
 
     newitems = Array.new(@size)
-    @items.each { |item| newitems[index(item.key, @size)] = item if item }
+    @items.each do |item|
+      newitems[index(item.key, @size)] = item if item
+    end
+
     @items = newitems
     nil
   end
@@ -40,7 +45,7 @@ class HashClass
   # We are hashing based on strings, let's use the ascii value of each string as
   # a starting point.
   def index(key, size)
-    key.each_byte.map{|c| c}.join('').to_i % @size
+    key.sum % @size
   end
 
   # Simple method to return the number of items in the hash

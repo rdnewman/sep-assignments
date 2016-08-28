@@ -9,16 +9,18 @@ class OpenAddressing
   end
 
   def []=(key, value)
-    idx = index(key)
+    enum = quadratic_enumerator(key, @size)
+
+    idx = enum.next
     item = @items[idx]
 
     return if item && item.key == key && item.value == value
 
     while item && item.key != key
-      idx = next_open_index(idx)
+      idx = enum.next
       if idx == -1
         resize
-        idx = next_open_index(idx)
+        idx = next_open_index(idx, key)
         @items[idx] = Node.new(key, value)
         return @items[idx]
       end
@@ -46,18 +48,32 @@ class OpenAddressing
   # We are hashing based on strings, let's use the ascii value of each string as
   # a starting point.
   def index(key, size = nil)
-    key.sum % (size ? size : @size)
+    enum = quadratic_enumerator(key, size)
+    enum.next
   end
 
   # Given an index, find the next open index in @items
   def next_open_index(index, key = nil)
-    # wraps through all elements starting at given index
-    (index..(@size + index - 1)).each do |i|
-      potential = i % @size
-      is_open = @items[potential].nil? || @items[potential].key == key
-      return potential if is_open
+    tried = []
+    quadratic_enumerator(key, @size).each do |potential|
+      if tried.include? potential
+        return -1
+      else
+        is_open = @items[potential].nil? || @items[potential].key == key
+        return potential if is_open
+      end
     end
     -1  # if no open slots
+  end
+
+  def quadratic_enumerator(key, size = nil)
+    idx = key ? key.sum % (size ? size : @size) : 0
+    Enumerator.new do |y|
+      y << idx
+      1.upto(@size) do |i|
+        y << (idx + (i ** i)) % size
+      end
+    end
   end
 
   # Resize the hash

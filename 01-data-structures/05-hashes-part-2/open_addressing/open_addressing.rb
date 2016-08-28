@@ -9,7 +9,7 @@ class OpenAddressing
   end
 
   def []=(key, value)
-    enum = quadratic_enumerator(key, @size)
+    enum = double_hashing_enumerator(key, @size)
 
     idx = enum.next
     item = @items[idx]
@@ -48,14 +48,13 @@ class OpenAddressing
   # We are hashing based on strings, let's use the ascii value of each string as
   # a starting point.
   def index(key, size = nil)
-    enum = quadratic_enumerator(key, size)
-    enum.next
+    key ? key.sum % (size || @size) : 0
   end
 
   # Given an index, find the next open index in @items
   def next_open_index(index, key = nil)
     tried = []
-    quadratic_enumerator(key, @size).each do |potential|
+    double_hashing_enumerator(key, @size).each do |potential|
       if tried.include? potential
         return -1
       else
@@ -66,12 +65,25 @@ class OpenAddressing
     -1  # if no open slots
   end
 
-  def quadratic_enumerator(key, size = nil)
-    idx = key ? key.sum % (size ? size : @size) : 0
+  def double_hashing_enumerator(key, size_arg = nil)
+    hashcode = key ? key.sum : 0
+    size = size_arg || @size
+    idx = hashcode % size
+
+    prime = 1
+    [2, 3, 5, 7, 13, 23, 53, 97, 193, 389].each do |i|
+      if i < size
+        prime = i
+      else
+        break
+      end
+    end
+    hash2 = ->(hc_arg){prime - (hc_arg % prime) }
+
     Enumerator.new do |y|
       y << idx
-      1.upto(@size) do |i|
-        y << (idx + (i ** i)) % size
+      1.upto(size || @size) do |i|
+        y << (idx + (i * hash2.call(hashcode))) % size
       end
     end
   end

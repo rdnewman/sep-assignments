@@ -10,21 +10,28 @@ class OpenAddressing
   def initialize(size, strategy = :linear_probing)
     @size = size > 0 ? size : 1
     @items = Array.new(@size)
-#  strategy = :double_hashing
-#  strategy = :quadratic_probing
-    @enumerator_method_name = (strategy.to_s + '_enumerator').to_sym
+
+    @orig_size = @size
+    @resizings = 0
+
+    if [:linear_probing, :quadratic_probing, :double_hashing].include? strategy
+      @strategy = strategy
+    else
+      @strategy = :linear_probing
+    end
+    @enumerator_method_name = (@strategy.to_s + '_enumerator').to_sym
   end
 
   def []=(key, value)
     enum = index_enumerator(key, @size)
 
-    idx = enum.next
+    idx = next_index(enum)
     item = @items[idx]
 
     return if item && item.key == key && item.value == value
 
     while item && item.key != key
-      idx = enum.next
+      idx = next_index(enum)
       if idx == -1
         resize
         idx = next_open_index(idx, key)
@@ -67,29 +74,9 @@ class OpenAddressing
     -1  # if no open slots
   end
 
-=begin
-  # [THIS VERSION SEEMS SAFER BUT THE TESTS PASS WITHOUT THE EXTRA CHECKING AND
-  #  IT'S FASTER/SMALLER WITHOUT THIS CHECKING, BUT I DOUBT IT WOULD WORK
-  #  FOR NON-LINEAR PROBING IN LARGER TABLES WITHOUT A VARIATION OF THIS APPORACH]
-  require 'set'
-  # Given an index, find the next open index in @items
-  def next_open_index(index, key = nil)
-    tried = Set.new
-    index_enumerator(key, @size).each do |potential|
-      if tried.include? potential
-        return -1
-      else
-        tried << potential
-        is_open = @items[potential].nil? || @items[potential].key == key
-        return potential if is_open
-      end
-    end
-    -1  # if no open slots
-  end
-=end
-
   # Resize the hash
   def resize
+    @resizings += 1
     @size = @size * 2
 
     newitems = Array.new(@size)
@@ -102,15 +89,35 @@ class OpenAddressing
 
   # Display current state of hash
   def print
-    puts "size: #{size}"
-    @items.each_with_index do |item, idx|
-      if item
-        puts "#{idx}: #{item}"
-      end
+    puts self
+  end
+
+  def to_s
+    result = []
+    result << "using #{@strategy}"
+    result << "#{@resizings} resizes so far"
+    result << "size: #{size} (= #{@orig_size} * 2**#{@resizings})"
+    result << "load factor: #{load_factor.round(2)}"
+    result += @items.map.with_index do |item, idx|
+      "#{idx}: #{item ? item : '(empty)'}"
     end
+    result.join("\n")
   end
 
 private
+  def load_factor
+    item_count = @items.compact.count
+    item_count.to_f / size
+  end
+
+  def next_index(enum)
+    begin
+      enum.next
+    rescue StopIteration
+      -1
+    end
+  end
+
   def index_enumerator(key, size_arg = nil)
     size = size_arg || @size
     self.send(@enumerator_method_name, key, size)

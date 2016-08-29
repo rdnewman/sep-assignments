@@ -80,14 +80,12 @@ class LinkedList
   end
 
   def each_duped(&block)
-    return enum_for(:each) unless block_given?
+    return enum_for(:each_duped) unless block_given?
 
-    node = @head
-    while node do
+    self.each do |node|
       tmp = node.dup
       tmp.next = nil
       yield tmp
-      node = node.next
     end
   end
 

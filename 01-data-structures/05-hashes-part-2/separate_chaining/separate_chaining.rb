@@ -7,6 +7,9 @@ class SeparateChaining
     @items = Array.new(size)
     @item_count = 0
     @max_load_factor = 0.7
+
+    @orig_size = @size
+    @resizings = 0
   end
 
   def []=(key, value)
@@ -56,6 +59,24 @@ class SeparateChaining
     sum % size
   end
 
+
+  # Display current state of hash
+  def print
+    puts self
+  end
+
+  def to_s
+    result = []
+    result << "#{@resizings} resizes so far"
+    result << "size: #{size} (= #{@orig_size} * 2**#{@resizings})"
+    result << "load factor: #{load_factor.round(2)}"
+    result += @items.map.with_index do |item, idx|
+      "#{idx}: #{item ? item : '(empty)'}"
+    end
+    result.join("\n")
+  end
+
+
   # Calculate the current load factor
   def load_factor
     @item_count / self.size.to_f
@@ -68,6 +89,7 @@ class SeparateChaining
 
   # Resize the hash
   def resize
+    @resizings += 1
     new_size = size*2
     new_items = Array.new(new_size)
     (0..@items.size-1).each do |i|

@@ -7,6 +7,9 @@ class SeparateChaining
     @items = Array.new(size)
     @item_count = 0
     @max_load_factor = 0.7
+
+    @orig_size = size
+    @resizings = 0
   end
 
   def []=(key, value)
@@ -14,9 +17,9 @@ class SeparateChaining
     n = Node.new(key, value)
 
     # COLLISION!
-    @items[i] != nil ? list = @items[i] : list = LinkedList.new
-
+    list = @items[i] ? @items[i] : LinkedList.new
     list.add_to_tail(n)
+
     @items[i] = list
     @item_count = @item_count + 1
 
@@ -56,6 +59,23 @@ class SeparateChaining
     sum % size
   end
 
+
+  # Display current state of hash
+  def print
+    puts self
+  end
+
+  def to_s
+    result = []
+    result << "#{@resizings} resizes so far"
+    result << "size: #{size} (= #{@orig_size} * 2**#{@resizings})"
+    result << "load factor: #{load_factor.round(2)}"
+    result += @items.map.with_index do |item, idx|
+      "#{idx}: #{item ? item.to_s : '(empty)'}"
+    end
+    result.join("\n")
+  end
+
   # Calculate the current load factor
   def load_factor
     @item_count / self.size.to_f
@@ -68,23 +88,21 @@ class SeparateChaining
 
   # Resize the hash
   def resize
-    new_size = size*2
+    @resizings += 1
+    new_size = size * 2
     new_items = Array.new(new_size)
-    (0..@items.size-1).each do |i|
-      list = @items[i]
-      if list != nil
-        curr = list.head
-        # We only need to compute the new index once
-        new_index = index(curr.key, new_items.size)
-        while curr != nil
-          list = LinkedList.new
-          list.add_to_tail(curr)
-          new_items[new_index] = list
-          curr = curr.next
+
+    @items.each do |chain|
+      if chain
+        chain.each_duped do |item|   # need to use new copies so that enumeration works properly when reassigning into new linked lists
+          idx = index(item.key, new_size)
+          new_items[idx] = LinkedList.new unless new_items[idx]
+          new_items[idx].add_to_tail(item)
         end
       end
     end
-
     @items = new_items
+
+    nil
   end
 end

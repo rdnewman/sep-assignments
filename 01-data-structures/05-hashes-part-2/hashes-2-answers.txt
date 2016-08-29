@@ -1,0 +1,42 @@
+Describe three collision resolution strategies not mentioned here.
+------------------------------------------------------------------
+
+Coalesced hashing:  a hybrid of open addressing and separate chaining, where
+chains are formed by referring to (i.e., linking to) other open spots in the
+initial array instead of generating separate linked-list allocations.
+(reference: https://en.wikipedia.org/wiki/Coalesced_hashing)
+
+Hopscotch hashing: a form of open addressing, this approach maintains a region
+of the storage array near a given bucket so that keys that resolve to a bucket
+are placed via linear probe near the targeted bucket.  When a given region, or
+"neighborhood", is exceeded, the storage array is resized.
+(reference: https://en.wikipedia.org/wiki/Hopscotch_hashing)
+
+Robin Hood hashing: open addressing using a common probe approach, but swaps the
+entries in the hash table (storage array) whenever the probe length of an existing
+element is less than that of incoming element.  The idea is to de-bias the
+collision resolution away from the earliest-added elements.
+(reference: http://www.sebastiansylvan.com/post/robin-hood-hashing-should-be-your-default-hash-table-implementation/)
+
+
+
+Create your own collision resolution strategy and describe how it works
+-----------------------------------------------------------------------
+
+Even-odd-skip probing:  an open address probing technique where instead of merely
+incrementing by 1 as in linear probing, the following algorithm is used:
+- if the originally targeted position is even-numbered (as in the storage array
+position), then the next odd-numbered positions are tried in succession and
+then the even-numbered positions are tried.
+- if the originally targeted position is odd-numbered, then the next
+even-numbered positions are tried in succession and then the odd-numbered
+positions are tried.
+- if no open position can be found, the hash table is resized and the insertion re-applied
+
+- DISADVANTAGE: likely to suffer similarly long probe chains like linear probing
+if several keys cluster at the same collision point
+- ADVANTAGE: likely to distribute elements across the hash table more evenly resulting
+in fewer initial collisions; will visit every position the hash table before resizing
+- VARIATION: instead of every-other position (as in all even positions would be),
+try every third (or other prime number) position (and lose the even-odd alternation)
+-- this variation really just becomes a variation of double hashing

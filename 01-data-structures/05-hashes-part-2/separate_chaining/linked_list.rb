@@ -31,7 +31,13 @@ class LinkedList
 
   # This method prints out a representation of the list.
   def print
-    self.each{|node| puts node}
+    puts self
+  end
+
+  def to_s
+    self.map.with_index do |item, idx|
+      "[#{idx}#{" (HEAD)" if idx == 0}]: #{item ? item : '(empty)'}"
+    end.join('; ')
   end
 
   # This method removes `node` from the list and must keep the rest of the list intact.
@@ -69,6 +75,18 @@ class LinkedList
     node = @head
     while node do
       yield node
+      node = node.next
+    end
+  end
+
+  def each_duped(&block)
+    return enum_for(:each) unless block_given?
+
+    node = @head
+    while node do
+      tmp = node.dup
+      tmp.next = nil
+      yield tmp
       node = node.next
     end
   end
